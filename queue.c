@@ -26,6 +26,12 @@ int add_to_queue(struct Queue * q, char* body){
   return 0;
 }
 
+
+int init_queue(struct Queue * q){
+  q->len = 0;
+  return 0;
+}
+
 int main () {
   // test functions
   struct Queue q;

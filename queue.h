@@ -12,5 +12,6 @@ struct Queue {
   struct Node * last;
 };
 
+int init_queue(struct Queue * q);
 int add_to_queue(struct Queue * q, char* body);
 int remove_from_queue(struct Queue * q, char **result);
