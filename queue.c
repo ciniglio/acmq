@@ -53,6 +53,23 @@ int init_queue(struct Queue * q){
 int main () {
   // test functions
   struct Queue q;
-  q.len = 0;
+  init_queue(&q);
+
+  add_to_queue(&q, "Alejandro");
+  printf("Queue size: %d\n", q.len);
+  add_to_queue(&q, "Darren");
+  printf("Queue size: %d\n", q.len);
+
+  char * result;
+  remove_from_queue(&q, &result);
+  printf("Queue size: %d\n", q.len);
+  printf("Queue result: %s\n", result);
+  free(result);
+
+  char * result2;
+  remove_from_queue(&q, &result2);
+  printf("Queue size: %d\n", q.len);
+  printf("Queue result: %s\n", result2);
+  free(result2);
   return 0;
 }
