@@ -27,6 +27,23 @@ int add_to_queue(struct Queue * q, char* body){
   return 0;
 }
 
+int remove_from_queue(struct Queue * q, char **result){
+  struct Node * n = q->first;
+  *result = malloc((n->body_size + 1) * sizeof(char));
+  if (*result == NULL)
+    return 1;
+  strlcpy(*result, n->body, n->body_size+1);
+
+  q->first = q->first->next;
+  if (q->first != NULL)
+    q->first->prev = NULL;
+  q->len--;
+
+  free(n->body);
+  free(n);
+
+  return 0;
+}
 
 int init_queue(struct Queue * q){
   q->len = 0;
