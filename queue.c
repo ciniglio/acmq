@@ -18,8 +18,11 @@ int add_to_queue(struct Queue * q, char* body){
     q->first = n;
     q->last = n;
     q->len = 1;
+    n->prev = NULL;
+    n->next = NULL;
   } else {
     n->prev = q->last;
+    n->next = NULL;
     q->last->next = n;
     q->last = n;
     q->len++;
@@ -28,6 +31,11 @@ int add_to_queue(struct Queue * q, char* body){
 }
 
 int remove_from_queue(struct Queue * q, char **result){
+  if (q->len == 0){
+    *result = NULL;
+    return 0;
+  }
+
   struct Node * n = q->first;
   *result = malloc((n->body_size + 1) * sizeof(char));
   if (*result == NULL)
@@ -50,7 +58,7 @@ int init_queue(struct Queue * q){
   return 0;
 }
 
-int main () {
+int main_test () {
   // test functions
   struct Queue q;
   init_queue(&q);
