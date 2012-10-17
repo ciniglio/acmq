@@ -1,7 +1,7 @@
 all: main
 
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -g
 
 queue_HDR = queue.h
 
