@@ -7,15 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
-#include <sys/wait.h>
 
 #include "server.h"
-
-void sigchld_handler(int s)
-{
-  while(waitpid(-1, NULL, WNOHANG) > 0);
-}
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -98,22 +91,6 @@ int main() {
     exit(1);
   }
 
-  // set handler function
-  sa.sa_handler = sigchld_handler; // reap all dead processes
-
-  // empty out bitmask (used when delivering the signal to handler)
-  sigemptyset(&sa.sa_mask);
-
-  // restart process if in the middle of an important call
-  sa.sa_flags = SA_RESTART;
-
-  // bind the handler to the SIGCHLD signal
-  // (change in state of child proc)
-  if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-    perror("sigaction");
-    exit(1);
-  }
-
   printf("server: waiting for connections...\n");
 
   while(1) {  // main accept() loop
@@ -121,6 +98,7 @@ int main() {
     new_connection_fd = accept(socket_fd,
                                (struct sockaddr *)&their_addr,
                                &sin_size);
+
     if (new_connection_fd == -1) {
       perror("accept");
       continue;
@@ -133,22 +111,12 @@ int main() {
     printf("server: got connection from %s\n", s);
 
     char * buf = malloc(sizeof(char)*256);
-    printf("sizof %d\n", sizeof(*buf));
+
     recv(new_connection_fd, buf, 256, 0);
-
     printf("server: got %s\n", buf);
-
-    // multithreading
-    if (!fork()) { // this is the child process
-      close(socket_fd); // child doesn't need the listener
-      if (send(new_connection_fd, "Hello, world!\n", 13, 0) == -1)
-        perror("send");
-      close(new_connection_fd);
-      exit(0);
-    }
-    close(new_connection_fd);  // parent doesn't need this
+    if (send(new_connection_fd, "Hello, world!\n", 13, 0) == -1)
+      perror("send");
+    close(new_connection_fd);
   }
-
   return 0;
-
 }
