@@ -2,9 +2,20 @@
 #include "queue.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
+struct Queue * queue;
+
+void initialize_queue(){
+  queue = malloc(sizeof(struct Queue));
+  init_queue(queue);
+}
+
 void handle_string(char * str){
+  if (queue == NULL)
+    initialize_queue();
+
   char *command, *body;
   command = strtok_r(str, " ", &body);
 
