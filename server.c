@@ -27,14 +27,14 @@ void set_hints_for_streaming(struct addrinfo * hints){
   hints->ai_flags = AI_PASSIVE; // use my IP
 }
 
-int bind_to_servinfo(struct addrinfo * servinfo, struct addrinfo * p){
+int bind_to_servinfo(struct addrinfo * servinfo, struct addrinfo ** p){
   int yes=1;
   int socket_fd;
 
   // loop through all the results and bind to the first we can
-  for(p = servinfo; p != NULL; p = p->ai_next) {
-    if ((socket_fd = socket(p->ai_family, p->ai_socktype,
-                            p->ai_protocol)) == -1) {
+  for(*p = servinfo; *p != NULL; *p = (*p)->ai_next) {
+    if ((socket_fd = socket((*p)->ai_family, (*p)->ai_socktype,
+                            (*p)->ai_protocol)) == -1) {
       perror("server: socket");
       continue;
     }
@@ -45,7 +45,7 @@ int bind_to_servinfo(struct addrinfo * servinfo, struct addrinfo * p){
       exit(1);
     }
 
-    if (bind(socket_fd, p->ai_addr, p->ai_addrlen) == -1) {
+    if (bind(socket_fd, (*p)->ai_addr, (*p)->ai_addrlen) == -1) {
       close(socket_fd);
       perror("server: bind");
       continue;
@@ -65,6 +65,7 @@ int create_server(void (*callback)(char *, char **), char *port) {
   struct sockaddr_storage their_addr; // connector's address information
   socklen_t sin_size;
   char s[INET6_ADDRSTRLEN];
+  char t[INET6_ADDRSTRLEN];
   int rv;
 
   set_hints_for_streaming(&hints);
@@ -75,7 +76,7 @@ int create_server(void (*callback)(char *, char **), char *port) {
     return 1;
   }
 
-  socket_fd = bind_to_servinfo(servinfo, p);
+  socket_fd = bind_to_servinfo(servinfo, &p);
 
   if (p == NULL)  {
     fprintf(stderr, "server: failed to bind\n");
@@ -89,7 +90,14 @@ int create_server(void (*callback)(char *, char **), char *port) {
     exit(1);
   }
 
-  printf("server: waiting for connections...\n");
+  get_in_addr((struct sockaddr *)&(p->ai_addr));
+
+  inet_ntop(p->ai_family,
+            get_in_addr((struct sockaddr *) p->ai_addr),
+            t,
+            sizeof t);
+
+  printf("server: waiting for connections on %s...\n", t);
 
   while(1) {  // main accept() loop
     sin_size = sizeof their_addr;
