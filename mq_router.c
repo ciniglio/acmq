@@ -20,10 +20,14 @@ void handle_string(char * str, char ** result){
   command = strtok_r(str, " ", &body);
 
   if (!strcmp(command, "PUSH")) {
-    printf("PUSHED!!");
+    printf("PUSHED!!\n");
+    add_to_queue(queue, body);
   } else if (!strcmp(command, "POP")) {
-    printf("POPPED");
+    printf("POPPED\n");
+    char * tmp;
+    remove_from_queue(queue, result);
+    printf("TMP: %s\n", tmp);
   } else {
-    printf("don't know what we did");
+    printf("don't know what we did\n");
   }
 }
