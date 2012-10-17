@@ -13,11 +13,21 @@
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
 {
+if (sa->sa_family == AF_INET) {
+return &(((struct sockaddr_in*)sa)->sin_addr);
+ }
+
+ return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+// get sockaddr, IPv4 or IPv6:
+in_port_t get_in_port(struct sockaddr *sa)
+{
   if (sa->sa_family == AF_INET) {
-    return &(((struct sockaddr_in*)sa)->sin_addr);
+    return (((struct sockaddr_in*)sa)->sin_port);
   }
 
-  return &(((struct sockaddr_in6*)sa)->sin6_addr);
+  return (((struct sockaddr_in6*)sa)->sin6_port);
 }
 
 void set_hints_for_streaming(struct addrinfo * hints){
@@ -83,21 +93,23 @@ int create_server(void (*callback)(char *, char **), char *port) {
     return 2;
   }
 
-  freeaddrinfo(servinfo); // all done with this structure
+
 
   if (listen(socket_fd, 10) == -1) {
     perror("listen");
     exit(1);
   }
 
-  get_in_addr((struct sockaddr *)&(p->ai_addr));
-
   inet_ntop(p->ai_family,
             get_in_addr((struct sockaddr *) p->ai_addr),
             t,
             sizeof t);
 
-  printf("server: waiting for connections on %s...\n", t);
+  printf("server: waiting for connections on %s:%d...\n",
+         t,
+         ntohs(get_in_port((struct sockaddr *) p->ai_addr)));
+
+  freeaddrinfo(servinfo); // all done with this structure
 
   while(1) {  // main accept() loop
     sin_size = sizeof their_addr;
