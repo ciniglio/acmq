@@ -122,3 +122,11 @@ int create_server(void (*callback)(char *)) {
   }
   return 0;
 }
+
+void printme(char * str){
+  printf("printme: %s\n", str);
+}
+
+int main(){
+  create_server(&printme);
+}
