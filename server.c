@@ -27,55 +27,21 @@ void *get_in_addr(struct sockaddr *sa)
   return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-int main() {
+void set_hints_for_streaming(struct addrinfo * hints){
+  memset(hints, 0, sizeof *hints); //clear hints struct
+  hints->ai_family = AF_UNSPEC; //either IP4 or 6
+  hints->ai_socktype = SOCK_STREAM; // TCP
+  hints->ai_flags = AI_PASSIVE; // use my IP
+}
 
-  /* int listenfd = 0; */
-  /* int connfd = 0; */
-
-  /* int status; */
-  /* struct addrinfo hints; */
-  /* struct addrinfo * servinfo; */
-
-  /* memset(&hints, 0, sizeof(hints)); */
-  /* hints.ai_family = AF_UNSPEC; //don't care if ip4 or 6' */
-  /* hints.ai_socktype = SOCK_STREAM; //tcp not udp */
-  /* hints.ai_flags = AI_PASSIVE; // fill in ip automatically */
-
-  /* if ((status = getaddrinfo(NULL, "3490", &hints, &servinfo)) != 0) { */
-  /*   fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status)); */
-  /*   exit(1); */
-  /* } // servinfo now points to ll of addrinfos */
-
-
-
-  /* freeaddrinfo(servinfo); */
-
-
-  int socket_fd, new_connection_fd;
-    // listen on sock_fd, new connection on new_fd
-  struct addrinfo hints, *servinfo, *p;
-  struct sockaddr_storage their_addr; // connector's address information
-  socklen_t sin_size;
-  struct sigaction sa;
+int bind_to_servinfo(struct addrinfo * servinfo, struct addrinfo * p){
   int yes=1;
-  char s[INET6_ADDRSTRLEN];
-  int rv;
-
-  memset(&hints, 0, sizeof hints); //clear hints struct
-  hints.ai_family = AF_UNSPEC; //either IP4 or 6
-  hints.ai_socktype = SOCK_STREAM; // TCP
-  hints.ai_flags = AI_PASSIVE; // use my IP
-
-  // get my addrinfo in servinfo
-  if ((rv = getaddrinfo(NULL, "3443", &hints, &servinfo)) != 0) {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-    return 1;
-  }
+  int socket_fd;
 
   // loop through all the results and bind to the first we can
   for(p = servinfo; p != NULL; p = p->ai_next) {
     if ((socket_fd = socket(p->ai_family, p->ai_socktype,
-                         p->ai_protocol)) == -1) {
+                            p->ai_protocol)) == -1) {
       perror("server: socket");
       continue;
     }
@@ -94,6 +60,31 @@ int main() {
 
     break;
   }
+
+  return socket_fd;
+}
+
+int main() {
+
+  int socket_fd, new_connection_fd;
+    // listen on sock_fd, new connection on new_fd
+  struct addrinfo hints, *servinfo, *p;
+  struct sockaddr_storage their_addr; // connector's address information
+  socklen_t sin_size;
+  struct sigaction sa;
+  int yes=1;
+  char s[INET6_ADDRSTRLEN];
+  int rv;
+
+  set_hints_for_streaming(&hints);
+
+  // get my addrinfo in servinfo
+  if ((rv = getaddrinfo(NULL, "3443", &hints, &servinfo)) != 0) {
+    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+    return 1;
+  }
+
+  socket_fd = bind_to_servinfo(servinfo, p);
 
   if (p == NULL)  {
     fprintf(stderr, "server: failed to bind\n");
