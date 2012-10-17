@@ -57,7 +57,7 @@ int bind_to_servinfo(struct addrinfo * servinfo, struct addrinfo * p){
   return socket_fd;
 }
 
-int main() {
+int create_server(void (*callback)(char *)) {
 
   int socket_fd, new_connection_fd;
     // listen on sock_fd, new connection on new_fd
@@ -113,7 +113,9 @@ int main() {
     char * buf = malloc(sizeof(char)*256);
 
     recv(new_connection_fd, buf, 256, 0);
-    printf("server: got %s\n", buf);
+    callback(buf);
+    free(buf);
+
     if (send(new_connection_fd, "Hello, world!\n", 13, 0) == -1)
       perror("send");
     close(new_connection_fd);
