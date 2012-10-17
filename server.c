@@ -111,11 +111,17 @@ int create_server(void (*callback)(char *, char **)) {
     char * buf = malloc(sizeof(char)*256);
     char * result;
     recv(new_connection_fd, buf, 256, 0);
-    free(buf);
     callback(buf, &result);
 
-    if (send(new_connection_fd, "Hello, world!\n", 13, 0) == -1)
+    if(result != NULL){
+      if (send(new_connection_fd, result, strlen(result), 0) == -1)
+        perror("send");
+      free(result);
+    }
+    if (send(new_connection_fd, "ACK", 3, 0) == -1)
       perror("send");
+
+    free(buf);
     close(new_connection_fd);
   }
   return 0;
