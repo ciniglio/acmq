@@ -57,7 +57,7 @@ int bind_to_servinfo(struct addrinfo * servinfo, struct addrinfo * p){
   return socket_fd;
 }
 
-int create_server(void (*callback)(char *, char **)) {
+int create_server(void (*callback)(char *, char **), char *port) {
 
   int socket_fd, new_connection_fd;
     // listen on sock_fd, new connection on new_fd
@@ -70,7 +70,7 @@ int create_server(void (*callback)(char *, char **)) {
   set_hints_for_streaming(&hints);
 
   // get my addrinfo in servinfo
-  if ((rv = getaddrinfo(NULL, "3443", &hints, &servinfo)) != 0) {
+  if ((rv = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
     return 1;
   }
