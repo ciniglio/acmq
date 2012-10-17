@@ -12,7 +12,7 @@ void initialize_queue(){
   init_queue(queue);
 }
 
-void handle_string(char * str){
+void handle_string(char * str, char ** result){
   if (queue == NULL)
     initialize_queue();
 

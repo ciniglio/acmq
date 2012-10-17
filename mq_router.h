@@ -1,1 +1,1 @@
-void handle_string(char * str);
+void handle_string(char * str, char ** result);

@@ -1,1 +1,1 @@
-int create_server(void (*callback)(char *));
+int create_server(void (*callback)(char *, char **));
