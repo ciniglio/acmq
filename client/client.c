@@ -101,7 +101,6 @@ void print_connection_info(struct Connection * c){
 
 void destroy_connection(struct Connection * c){
   freeaddrinfo(c->si);
-  freeaddrinfo(c->p);
   close(c->sockfd);
 
   free(c);
@@ -119,14 +118,14 @@ int main(int argc, char *argv[])
         struct Connection * c = init_connection(argv[1], PORT);
         print_connection_info(c);
 
-        if ((numbytes = recv(c->sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-            perror("recv");
-            exit(1);
-        }
+        /* if ((numbytes = recv(c->sockfd, buf, MAXDATASIZE-1, 0)) == -1) { */
+        /*     perror("recv"); */
+        /*     exit(1); */
+        /* } */
 
-        buf[numbytes] = '\0';
+        /* buf[numbytes] = '\0'; */
 
-        printf("client: received '%s'\n",buf);
+        /* printf("client: received '%s'\n",buf); */
 
         destroy_connection(c);
         return 0;
