@@ -13,6 +13,7 @@ void initialize_queue(){
 }
 
 void handle_string(char * str, char ** result){
+  *result = NULL;
   if (queue == NULL)
     initialize_queue();
 
