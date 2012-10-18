@@ -10,4 +10,4 @@ client: client.o
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 clean:
-	rm -f *.o queue strip main
+	rm -f *.o client
