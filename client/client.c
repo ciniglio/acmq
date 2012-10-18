@@ -103,7 +103,6 @@ void print_connection_info(){
   char s[INET6_ADDRSTRLEN];
   inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
             s, sizeof s);
-
   printf("client: connecting to %s\n", s);
 }
 
@@ -143,7 +142,6 @@ int recv_data_from_connection(char ** res){
 
   strlcpy(*res, buf, numbytes);
 
-  printf("client: received '%s' :: %d\n",buf, numbytes);
   return numbytes;
 }
 
