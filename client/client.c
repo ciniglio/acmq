@@ -106,10 +106,41 @@ void destroy_connection(struct Connection * c){
   free(c);
 }
 
+/* Caller is responsible for making sure that buf is null terminated */
+int send_data_through_connection(struct Connection * c, char * buf){
+  int len = strlen(buf);
+  if (send(c->sockfd, buf, len, 0) == -1)
+    perror("send");
+  return 0;
+}
+
+
+/* returns number of bytes recieved. If negative, there was an error */
+int recv_data_from_connection(struct Connection *c, char ** res){
+  int numbytes;
+  char buf[MAXDATASIZE];
+
+  if ((numbytes = recv(c->sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+    perror("recv");
+    exit(1);
+  }
+
+  buf[numbytes] = '\0';
+  *res = malloc(sizeof(char) * (numbytes+1));
+  if (*res == NULL){
+    perror("allocating buffer");
+    return -1;
+  }
+
+  strlcpy(*res, buf, numbytes);
+
+  printf("client: received '%s' :: %d\n",buf, numbytes);
+  return numbytes;
+}
+
 int main(int argc, char *argv[])
 {
-        int numbytes;
-        char buf[MAXDATASIZE];
+        char *buf;
 
         if (argc != 2) {
             fprintf(stderr,"usage: client hostname\n");
@@ -118,14 +149,9 @@ int main(int argc, char *argv[])
         struct Connection * c = init_connection(argv[1], PORT);
         print_connection_info(c);
 
-        /* if ((numbytes = recv(c->sockfd, buf, MAXDATASIZE-1, 0)) == -1) { */
-        /*     perror("recv"); */
-        /*     exit(1); */
-        /* } */
-
-        /* buf[numbytes] = '\0'; */
-
-        /* printf("client: received '%s'\n",buf); */
+        send_data_through_connection(c, "PUSH it on");
+        recv_data_from_connection(c, &buf);
+        free(buf);
 
         destroy_connection(c);
         return 0;
