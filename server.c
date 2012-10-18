@@ -32,7 +32,7 @@ in_port_t get_in_port(struct sockaddr *sa)
 
 void set_hints_for_streaming(struct addrinfo * hints){
   memset(hints, 0, sizeof *hints); //clear hints struct
-  hints->ai_family = AF_UNSPEC; //either IP4 or 6
+  hints->ai_family = AF_INET6; //AF_UNSPEC; //either IP4 or 6
   hints->ai_socktype = SOCK_STREAM; // TCP
   hints->ai_flags = AI_PASSIVE; // use my IP
 }
