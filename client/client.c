@@ -18,6 +18,7 @@
 
 int get_tcp_ai(char* host, char* port, struct addrinfo **res);
 int get_socket_from_ai(struct addrinfo * servinfo, struct addrinfo ** res);
+void print_connection_info();
 
 struct Connection {
   int sockfd;
@@ -47,6 +48,7 @@ int init_connection(char* host, char* port){
       return 1;
     }
   }
+  print_connection_info();
   return 0;
 }
 
