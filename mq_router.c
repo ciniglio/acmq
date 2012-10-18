@@ -19,9 +19,11 @@ void handle_string(char * str, char ** result){
   char *command, *body;
   command = strtok_r(str, " ", &body);
 
-  if (!strcmp(command, "PUSH")) {
+  if (command != NULL &&
+      !strncmp(command, "PUSH", 4)) {
     add_to_queue(queue, body);
-  } else if (!strncmp(str, "POP", 3)) {
+  } else if (str != NULL &&
+             !strncmp(str, "POP", 3)) {
     remove_from_queue(queue, result);
   } else {
     printf("don't know what we did\n");
