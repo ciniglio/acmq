@@ -4,3 +4,4 @@ queue
 strip
 main
 /client/client
+/client/mq_client

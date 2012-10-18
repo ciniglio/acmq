@@ -145,7 +145,7 @@ int recv_data_from_connection(char ** res){
   return numbytes;
 }
 
-int main(int argc, char *argv[])
+int main_test(int argc, char *argv[])
 {
         char *buf;
 
