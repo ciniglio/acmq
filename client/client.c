@@ -23,25 +23,29 @@ struct Connection {
   struct addrinfo * p;
 };
 
-struct Connection *init_connection(char* host, char* port){
-  struct Connection * c = malloc(sizeof(struct Connection));
+struct Connection *c = NULL;
+
+int init_connection(char* host, char* port){
   if (c == NULL){
-    perror("allocating Connection");
-    return NULL;
-  }
+    c = malloc(sizeof(struct Connection));
+    if (c == NULL){
+      perror("allocating Connection");
+      return 1;
+    }
 
-  if (get_tcp_ai(host, port, &(c->si)) != 0) {
-    perror("get TCP Addrinfo");
-  }
+    if (get_tcp_ai(host, port, &(c->si)) != 0) {
+      perror("get TCP Addrinfo");
+    }
 
-  c->sockfd = get_socket_from_ai(c->si, &(c->p));
+    c->sockfd = get_socket_from_ai(c->si, &(c->p));
 
-  if (c->p == NULL) {
-    fprintf(stderr, "client: failed to connect\n");
-    free(c);
-    return NULL;
+    if (c->p == NULL) {
+      fprintf(stderr, "client: failed to connect\n");
+      free(c);
+      return 1;
+    }
   }
-  return c;
+  return 0;
 }
 
 // get sockaddr, IPv4 or IPv6:
@@ -90,7 +94,7 @@ int get_socket_from_ai(struct addrinfo * servinfo, struct addrinfo ** res){
   return sockfd;
 }
 
-void print_connection_info(struct Connection * c){
+void print_connection_info(){
   struct addrinfo *p = c->p;
   char s[INET6_ADDRSTRLEN];
   inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
@@ -99,15 +103,16 @@ void print_connection_info(struct Connection * c){
   printf("client: connecting to %s\n", s);
 }
 
-void destroy_connection(struct Connection * c){
+void destroy_connection(){
   freeaddrinfo(c->si);
   close(c->sockfd);
 
   free(c);
+  c = NULL;
 }
 
 /* Caller is responsible for making sure that buf is null terminated */
-int send_data_through_connection(struct Connection * c, char * buf){
+int send_data_through_connection(char * buf){
   int len = strlen(buf);
   if (send(c->sockfd, buf, len, 0) == -1)
     perror("send");
@@ -116,7 +121,7 @@ int send_data_through_connection(struct Connection * c, char * buf){
 
 
 /* returns number of bytes recieved. If negative, there was an error */
-int recv_data_from_connection(struct Connection *c, char ** res){
+int recv_data_from_connection(char ** res){
   int numbytes;
   char buf[MAXDATASIZE];
 
@@ -146,13 +151,13 @@ int main(int argc, char *argv[])
             fprintf(stderr,"usage: client hostname\n");
             exit(1);
         }
-        struct Connection * c = init_connection(argv[1], PORT);
-        print_connection_info(c);
+        init_connection(argv[1], PORT);
+        print_connection_info();
 
-        send_data_through_connection(c, "PUSH it on");
-        recv_data_from_connection(c, &buf);
+        send_data_through_connection("PUSH it on");
+        recv_data_from_connection(&buf);
         free(buf);
 
-        destroy_connection(c);
+        destroy_connection();
         return 0;
 }
