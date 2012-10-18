@@ -14,6 +14,36 @@
 
 #define MAXDATASIZE 100 // max number of bytes we can get at once
 
+int get_tcp_ai(char* host, char* port, struct addrinfo **res);
+int get_socket_from_ai(struct addrinfo * servinfo, struct addrinfo ** res);
+
+struct Connection {
+  int sockfd;
+  struct addrinfo * si;
+  struct addrinfo * p;
+};
+
+struct Connection *init_connection(char* host, char* port){
+  struct Connection * c = malloc(sizeof(struct Connection));
+  if (c == NULL){
+    perror("allocating Connection");
+    return NULL;
+  }
+
+  if (get_tcp_ai(host, port, &(c->si)) != 0) {
+    perror("get TCP Addrinfo");
+  }
+
+  c->sockfd = get_socket_from_ai(c->si, &(c->p));
+
+  if (c->p == NULL) {
+    fprintf(stderr, "client: failed to connect\n");
+    free(c);
+    return NULL;
+  }
+  return c;
+}
+
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
 {
@@ -60,37 +90,36 @@ int get_socket_from_ai(struct addrinfo * servinfo, struct addrinfo ** res){
   return sockfd;
 }
 
+void print_connection_info(struct Connection * c){
+  struct addrinfo *p = c->p;
+  char s[INET6_ADDRSTRLEN];
+  inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
+            s, sizeof s);
+
+  printf("client: connecting to %s\n", s);
+}
+
+void destroy_connection(struct Connection * c){
+  freeaddrinfo(c->si);
+  freeaddrinfo(c->p);
+  close(c->sockfd);
+
+  free(c);
+}
+
 int main(int argc, char *argv[])
 {
-        int sockfd, numbytes;
+        int numbytes;
         char buf[MAXDATASIZE];
-        struct addrinfo *servinfo, *p;
-        char s[INET6_ADDRSTRLEN];
 
         if (argc != 2) {
             fprintf(stderr,"usage: client hostname\n");
             exit(1);
         }
+        struct Connection * c = init_connection(argv[1], PORT);
+        print_connection_info(c);
 
-        if (get_tcp_ai(argv[1], PORT, &servinfo) != 0) {
-          perror("get TCP Addrinfo");
-        }
-
-        sockfd = get_socket_from_ai(servinfo, &p);
-
-        if (p == NULL) {
-          fprintf(stderr, "client: failed to connect\n");
-          return 2;
-        }
-
-        inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
-                  s, sizeof s);
-
-        printf("client: connecting to %s\n", s);
-
-        freeaddrinfo(servinfo); // all done with this structure
-
-        if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+        if ((numbytes = recv(c->sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
             perror("recv");
             exit(1);
         }
@@ -99,7 +128,6 @@ int main(int argc, char *argv[])
 
         printf("client: received '%s'\n",buf);
 
-        close(sockfd);
-
+        destroy_connection(c);
         return 0;
 }
