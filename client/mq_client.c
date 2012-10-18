@@ -77,7 +77,7 @@ int push(struct mq_client * mq, char * buf){
   return 0;
 }
 
-int main(int argc, char *argv[]){
+int main_t(int argc, char *argv[]){
   struct mq_client * mq = initialize_mq_client("localhost", "3443");
 
   push(mq, "this on");
