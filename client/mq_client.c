@@ -6,6 +6,26 @@
 
 #define MAX_STRING_LENGTH 1024
 
+int pop(char ** res){
+  if(send_data_through_connection("POP") != 0){
+    perror("sending");
+    return 1;
+  }
+  char * long_res;
+
+  if (recv_data_from_connection(&long_res) < 0){
+    perror("Recieving");
+    return 1;
+  }
+
+  int len = strlen(long_res);
+  *res = malloc(sizeof(char) * (len + 1));
+  strlcpy(*res, long_res, len + 1);
+  free(long_res);
+
+  return 0;
+}
+
 // buf must be a NULL terminated string
 int push(char * buf){
   int len = strnlen(buf, MAX_STRING_LENGTH);
@@ -38,5 +58,15 @@ int main(int argc, char *argv[]){
     exit(1);
   }
   push("this on");
+  destroy_connection();
+
+
+  if(init_connection(argv[1], "3443") != 0){
+    exit(1);
+  }
+  char * res;
+  pop(&res);
+  printf("result: %s\n", res);
+  destroy_connection();
   return 0;
 }
