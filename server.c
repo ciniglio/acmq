@@ -11,19 +11,17 @@
 #include "server.h"
 
 // get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
-if (sa->sa_family == AF_INET) {
-return &(((struct sockaddr_in*)sa)->sin_addr);
- }
+void *get_in_addr(struct sockaddr *sa){
+  if (sa->sa_family == AF_INET){
+    return &(((struct sockaddr_in*)sa)->sin_addr);
+  }
 
- return &(((struct sockaddr_in6*)sa)->sin6_addr);
+  return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
 // get sockaddr, IPv4 or IPv6:
-in_port_t get_in_port(struct sockaddr *sa)
-{
-  if (sa->sa_family == AF_INET) {
+in_port_t get_in_port(struct sockaddr *sa){
+  if (sa->sa_family == AF_INET){
     return (((struct sockaddr_in*)sa)->sin_port);
   }
 
@@ -42,20 +40,20 @@ int bind_to_servinfo(struct addrinfo * servinfo, struct addrinfo ** p){
   int socket_fd;
 
   // loop through all the results and bind to the first we can
-  for(*p = servinfo; *p != NULL; *p = (*p)->ai_next) {
+  for(*p = servinfo; *p != NULL; *p = (*p)->ai_next){
     if ((socket_fd = socket((*p)->ai_family, (*p)->ai_socktype,
-                            (*p)->ai_protocol)) == -1) {
+                            (*p)->ai_protocol)) == -1){
       perror("server: socket");
       continue;
     }
 
     if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes,
-                   sizeof(int)) == -1) {
+                   sizeof(int)) == -1){
       perror("setsockopt");
       exit(1);
     }
 
-    if (bind(socket_fd, (*p)->ai_addr, (*p)->ai_addrlen) == -1) {
+    if (bind(socket_fd, (*p)->ai_addr, (*p)->ai_addrlen) == -1){
       close(socket_fd);
       perror("server: bind");
       continue;
@@ -67,7 +65,7 @@ int bind_to_servinfo(struct addrinfo * servinfo, struct addrinfo ** p){
   return socket_fd;
 }
 
-int create_server(void (*callback)(char *, char **), char *port) {
+int create_server(void (*callback)(char *, char **), char *port){
 
   int socket_fd, new_connection_fd;
     // listen on sock_fd, new connection on new_fd
@@ -81,21 +79,21 @@ int create_server(void (*callback)(char *, char **), char *port) {
   set_hints_for_streaming(&hints);
 
   // get my addrinfo in servinfo
-  if ((rv = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
+  if ((rv = getaddrinfo(NULL, port, &hints, &servinfo)) != 0){
     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
     return 1;
   }
 
   socket_fd = bind_to_servinfo(servinfo, &p);
 
-  if (p == NULL)  {
+  if (p == NULL){
     fprintf(stderr, "server: failed to bind\n");
     return 2;
   }
 
 
 
-  if (listen(socket_fd, 10) == -1) {
+  if (listen(socket_fd, 10) == -1){
     perror("listen");
     exit(1);
   }
@@ -111,13 +109,13 @@ int create_server(void (*callback)(char *, char **), char *port) {
 
   freeaddrinfo(servinfo); // all done with this structure
 
-  while(1) {  // main accept() loop
+  while(1){  // main accept() loop
     sin_size = sizeof their_addr;
     new_connection_fd = accept(socket_fd,
                                (struct sockaddr *)&their_addr,
                                &sin_size);
 
-    if (new_connection_fd == -1) {
+    if (new_connection_fd == -1){
       perror("accept");
       continue;
     }
@@ -134,11 +132,11 @@ int create_server(void (*callback)(char *, char **), char *port) {
     callback(buf, &result);
 
     if(result != NULL){
-      if (send(new_connection_fd, result, strlen(result), 0) == -1)
+      if (send(new_connection_fd, result, strlen(result) + 1, 0) == -1)
         perror("send");
       free(result);
     }
-    if (send(new_connection_fd, "ACK", 3, 0) == -1)
+    if (send(new_connection_fd, "ACK", 4, 0) == -1)
       perror("send");
 
     free(buf);

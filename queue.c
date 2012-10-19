@@ -58,7 +58,7 @@ int init_queue(struct Queue * q){
   return 0;
 }
 
-int main_test () {
+int main_test(){
   // test functions
   struct Queue q;
   init_queue(&q);

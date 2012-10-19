@@ -36,13 +36,13 @@ int init_connection(char* host, char* port){
       return 1;
     }
 
-    if (get_tcp_ai(host, port, &(c->si)) != 0) {
+    if (get_tcp_ai(host, port, &(c->si)) != 0){
       perror("get TCP Addrinfo");
     }
 
     c->sockfd = get_socket_from_ai(c->si, &(c->p));
 
-    if (c->p == NULL) {
+    if (c->p == NULL){
       fprintf(stderr, "client: failed to connect\n");
       free(c);
       return 1;
@@ -55,7 +55,7 @@ int init_connection(char* host, char* port){
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
 {
-        if (sa->sa_family == AF_INET) {
+        if (sa->sa_family == AF_INET){
                 return &(((struct sockaddr_in*)sa)->sin_addr);
         }
 
@@ -70,7 +70,7 @@ int get_tcp_ai(char* host, char* port, struct addrinfo **res){
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
 
-  if ((rv = getaddrinfo(host, port, &hints, res)) != 0) {
+  if ((rv = getaddrinfo(host, port, &hints, res)) != 0){
     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
     return 1;
   }
@@ -81,14 +81,14 @@ int get_tcp_ai(char* host, char* port, struct addrinfo **res){
 int get_socket_from_ai(struct addrinfo * servinfo, struct addrinfo ** res){
   // loop through all the results and connect to the first we can
   int sockfd;
-  for(*res = servinfo; *res != NULL; *res = (*res)->ai_next) {
+  for(*res = servinfo; *res != NULL; *res = (*res)->ai_next){
     if ((sockfd = socket((*res)->ai_family, (*res)->ai_socktype,
-                         (*res)->ai_protocol)) == -1) {
+                         (*res)->ai_protocol)) == -1){
       perror("client: socket");
       continue;
     }
 
-    if (connect(sockfd, (*res)->ai_addr, (*res)->ai_addrlen) == -1) {
+    if (connect(sockfd, (*res)->ai_addr, (*res)->ai_addrlen) == -1){
       close(sockfd);
       perror("client: connect");
       continue;
@@ -128,7 +128,7 @@ int recv_data_from_connection(char ** res){
   int numbytes;
   char buf[MAXDATASIZE];
 
-  if ((numbytes = recv(c->sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+  if ((numbytes = recv(c->sockfd, buf, MAXDATASIZE-1, 0)) == -1){
     perror("recv");
     exit(1);
   }
@@ -145,21 +145,20 @@ int recv_data_from_connection(char ** res){
   return numbytes;
 }
 
-int main_test(int argc, char *argv[])
-{
-        char *buf;
+int main_test(int argc, char *argv[]){
+  char *buf;
 
-        if (argc != 2) {
-            fprintf(stderr,"usage: client hostname\n");
-            exit(1);
-        }
-        init_connection(argv[1], PORT);
-        print_connection_info();
+  if (argc != 2){
+    fprintf(stderr,"usage: client hostname\n");
+    exit(1);
+  }
+  init_connection(argv[1], PORT);
+  print_connection_info();
 
-        send_data_through_connection("PUSH it on");
-        recv_data_from_connection(&buf);
-        free(buf);
+  send_data_through_connection("PUSH it on");
+  recv_data_from_connection(&buf);
+  free(buf);
 
-        destroy_connection();
-        return 0;
+  destroy_connection();
+  return 0;
 }
