@@ -126,9 +126,12 @@ int create_server(void (*callback)(char *, char **), char *port){
               sizeof s);
     printf("server: got connection from %s\n", s);
 
-    char * buf = malloc(sizeof(char)*256);
+    char * buf = malloc(sizeof(char)*257);
     char * result;
-    recv(new_connection_fd, buf, 256, 0);
+    int num_recieved = recv(new_connection_fd, buf, 256, 0);
+    num_recieved = num_recieved < 256 ? num_recieved : 256;
+    buf[num_recieved] = '\0';
+
     callback(buf, &result);
 
     if(result != NULL){
