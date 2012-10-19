@@ -15,15 +15,15 @@ void usage(){
 
 int main(int argc, char * argv[]){
   int count;
-  int bpop = 0;
+  int bpush = 0;
   char *body = NULL;
   char *host = NULL;
   char *port = NULL;
   if (argc < 2){
-    usage();
+    //usage();
   }
 
-  for(count = 1; count < argc; count ){
+  for(count = 1; count < argc; ){
     printf("argv: %s\n", argv[count]);
     if (argv[count][0] != '-')
       usage();
@@ -35,22 +35,31 @@ int main(int argc, char * argv[]){
       port = argv[++count];
       break;
     case 'u':
+      bpush = 1;
       body = argv[++count];
       break;
     case 'o':
-      bpop = 1;
       break;
     }
     count++;
 
   }
+  if (host == NULL)
+    host = "localhost";
+
+  if (port == NULL)
+    port = "3443";
 
   struct mq_client * mq = initialize_mq_client(host, port);
 
-  if(bpop){
+  if(bpush){
+    if (body == NULL)
+      usage();
+    push(mq, body);
+  } else {
     char * buf;
     pop(mq, &buf);
-    printf("POPPED: %s\n", buf);
+    printf("%s\n", buf);
     free(buf);
   }
 
