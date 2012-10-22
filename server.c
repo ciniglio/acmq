@@ -10,6 +10,8 @@
 
 #include "server.h"
 
+#define MAXDATASIZE 1024 // max number of bytes we can get at once
+
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa){
   if (sa->sa_family == AF_INET){
@@ -65,7 +67,9 @@ int bind_to_servinfo(struct addrinfo * servinfo, struct addrinfo ** p){
   return socket_fd;
 }
 
-int create_server(void (*callback)(char *, char **), char *port){
+int create_server(void (*callback)(char *, char **, void *),
+                  char *port,
+                  void * state ){
 
   int socket_fd, new_connection_fd;
     // listen on sock_fd, new connection on new_fd
@@ -126,20 +130,19 @@ int create_server(void (*callback)(char *, char **), char *port){
               sizeof s);
     printf("server: got connection from %s\n", s);
 
-    char * buf = malloc(sizeof(char)*257);
+    char buf[MAXDATASIZE];
     char * result;
-    int num_recieved = recv(new_connection_fd, buf, 256, 0);
-    num_recieved = num_recieved < 256 ? num_recieved : 256;
+    int num_recieved = recv(new_connection_fd, buf, MAXDATASIZE - 1, 0);
     buf[num_recieved] = '\0';
 
-    callback(buf, &result);
+    callback(buf, &result, state);
 
     if(result != NULL){
       if (send(new_connection_fd, result, strlen(result) + 1, 0) == -1)
         perror("send");
       free(result);
     }
-    if (send(new_connection_fd, "ACK", 4, 0) == -1)
+    if (send(new_connection_fd, "ACK\n", 4, 0) == -1)
       perror("send");
 
     free(buf);
