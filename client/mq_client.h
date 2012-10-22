@@ -1,5 +1,4 @@
-struct mq_client;
-struct mq_client * initialize_mq_client(char * host, char *port);
+struct client;
 
-int pop(struct mq_client * mq, char ** res);
-int push(struct mq_client * mq, char * buf);
+int pop(struct client * mq, char ** res);
+int push(struct client * mq, char * buf);
