@@ -12,7 +12,7 @@ class ACMQ():
 		string = "PUSH %s" % string
 		return_value = transact(string)
 		if return_value != "ACK\n":
-			raise "Pushing failed %s" % return_value
+			raise Exception("Pushing failed %s" % return_value)
 		return return_value
 
 	def pop():
