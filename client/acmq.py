@@ -10,13 +10,13 @@ class ACMQ():
 	def push(self, body):
 		string = json.dumps(body)
 		string = "PUSH %s" % string
-		return_value = transact(string)
+		return_value = self.transact(string)
 		if return_value != "ACK\n":
 			raise Exception("Pushing failed %s" % return_value)
 		return return_value
 
 	def pop(self):
-		string = transact("POP\n")
+		string = self.transact("POP\n")
 		return json.loads(string)[0]
 
 	def transact(self, string):
