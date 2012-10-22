@@ -28,7 +28,7 @@ struct Connection {
 
 
 struct client * initialize_client(char * host, char * port){
-  struct client *client = malloc(sizeof(struct client));
+  struct client * client = malloc(sizeof(struct client));
   client->host = malloc(sizeof(char) * (strlen(host) + 1));
   client->port = malloc(sizeof(char) * (strlen(port) + 1));
   strlcpy(client->host, host, strlen(host) + 1);
@@ -134,7 +134,7 @@ int send_data_through_connection(char * buf){
 }
 
 
-/* returns number of bytes recieved. If negative, there was an error */
+/* returns number of bytes received. If negative, there was an error */
 int recv_data_from_connection(char ** res){
   int numbytes;
   char buf[MAXDATASIZE];
@@ -154,6 +154,39 @@ int recv_data_from_connection(char ** res){
   strlcpy(*res, buf, numbytes);
 
   return numbytes;
+}
+
+int client_transaction(struct client * c, char * buf, char ** res){
+  init_connection(c->host, c->port);
+  if(send_data_through_connection(buf) != 0){
+    perror("Sending");
+    destroy_connection();
+    return 1;
+  }
+
+  char * long_res;
+
+  if (recv_data_from_connection(&long_res) < 0){
+    perror("Receiving");
+    destroy_connection();
+    return 1;
+  }
+
+  if (res != NULL){
+    int len = strlen(long_res);
+    *res = malloc(sizeof(char) * (len + 1));
+    strlcpy(*res, long_res, len + 1);
+  } else {
+    if (strncmp(long_res, "ACK", 3) != 0){
+      perror("No ACK");
+      destroy_connection();
+      free(long_res);
+      return 1;
+    }
+  }
+  free(long_res);
+  destroy_connection();
+  return 0;
 }
 
 int main_test(int argc, char *argv[]){
