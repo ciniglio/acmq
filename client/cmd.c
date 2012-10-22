@@ -20,6 +20,9 @@ int main(int argc, char * argv[]){
   char *body = NULL;
   char *host = NULL;
   char *port = NULL;
+
+  struct client * c;
+
   if (argc < 2){
     //usage();
   }
@@ -51,7 +54,7 @@ int main(int argc, char * argv[]){
   if (port == NULL)
     port = "3443";
 
-  struct client * c = initialize_client(host, port);
+  c = initialize_client(host, port);
 
   if(bpush){
     if (body == NULL)
