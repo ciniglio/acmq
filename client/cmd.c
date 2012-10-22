@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "mq_client.h"
+#include "client.h"
 
 void usage(){
   printf("Usage:\n");
@@ -50,18 +51,19 @@ int main(int argc, char * argv[]){
   if (port == NULL)
     port = "3443";
 
-  struct mq_client * mq = initialize_mq_client(host, port);
+  struct client * c = initialize_client(host, port);
 
   if(bpush){
     if (body == NULL)
       usage();
-    push(mq, body);
+    push(c, body);
   } else {
     char * buf;
-    pop(mq, &buf);
+    pop(c, &buf);
     printf("%s\n", buf);
     free(buf);
   }
 
+  free(c);
   return 0;
 }

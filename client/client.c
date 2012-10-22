@@ -14,7 +14,7 @@
 
 #define PORT "3443" // the port client will be connecting to
 
-#define MAXDATASIZE 100 // max number of bytes we can get at once
+#define MAXDATASIZE 1024 // max number of bytes we can get at once
 
 int get_tcp_ai(char* host, char* port, struct addrinfo **res);
 int get_socket_from_ai(struct addrinfo * servinfo, struct addrinfo ** res);
@@ -24,6 +24,17 @@ struct Connection {
   int sockfd;
   struct addrinfo * si;
   struct addrinfo * p;
+};
+
+
+struct client * initialize_client(char * host, char * port){
+  struct client *client = malloc(sizeof(struct client));
+  client->host = malloc(sizeof(char) * (strlen(host) + 1));
+  client->port = malloc(sizeof(char) * (strlen(port) + 1));
+  strlcpy(client->host, host, strlen(host) + 1);
+  strlcpy(client->port, port, strlen(port) + 1);
+
+  return client;
 };
 
 struct Connection *c = NULL;
