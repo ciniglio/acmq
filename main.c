@@ -1,5 +1,5 @@
 #include "queue.h"
-#include "mq_router.h"
+#include "bloom_router.h"
 #include "server.h"
 
 #include <stdlib.h>
