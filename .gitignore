@@ -6,3 +6,4 @@ main
 /client/client
 /client/mq_client
 /client/cmd
+*.pyc
