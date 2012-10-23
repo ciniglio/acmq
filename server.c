@@ -200,6 +200,8 @@ int create_server(void (*callback)(char *, char **, void *),
 
     FD_SET(socket_fd, &readset);
 
+    // go through all of our sockets and add them to the readset
+    // may want to go back and clear them later instead of doing this
     for (i=0; i < FD_SETSIZE; ++i) {
       if (fdstate[i]) {
         if (i > maxfd)
@@ -216,6 +218,8 @@ int create_server(void (*callback)(char *, char **, void *),
       return -1;
     }
 
+    // check to see if the listening socket has something new
+    // i.e. a new connection
     if (FD_ISSET(socket_fd, &readset)) {
       sin_size = sizeof their_addr;
       new_connection_fd = accept(socket_fd,
@@ -231,6 +235,7 @@ int create_server(void (*callback)(char *, char **, void *),
       }
     }
 
+    // go through all the sockets and see if any of them are ready
     for (i=0; i < maxfd+1; ++i) {
       int r = 0;
       if (i == socket_fd)
