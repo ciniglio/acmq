@@ -2,8 +2,15 @@
 #include <stdio.h>
 #include <string.h>
 #include "queue.h"
+#include "mq_persist.h"
 
 int add_to_queue(struct Queue * q, char* body){
+  int ret = _add_to_queue(q, body);
+  save_mq(q);
+  return ret;
+}
+
+int _add_to_queue(struct Queue * q, char* body){
   // build the node
   struct Node * n = malloc(sizeof(struct Node));
   int body_size = strlen(body);
@@ -27,10 +34,17 @@ int add_to_queue(struct Queue * q, char* body){
     q->last = n;
     q->len++;
   }
+
   return 0;
 }
 
 int remove_from_queue(struct Queue * q, char **result){
+  int ret = _remove_from_queue(q, result);
+  save_mq(q);
+  return ret;
+}
+
+int _remove_from_queue(struct Queue * q, char **result){
   if (q->len == 0){
     *result = NULL;
     return 0;
@@ -68,12 +82,20 @@ struct Queue * initialize_queue(){
   }
   return q;
 }
+
+struct Queue * copy_queue(struct Queue * q){
+  struct Queue * p = _initialize_queue();
+  struct Node * n;
+  for(n = q->first; (n && q->len != 0);){
+    _add_to_queue(p, n->body);
+    n = n->next;
+  }
+  return p;
 }
 
 int main_test(){
   // test functions
-  struct Queue q;
-  init_queue(&q);
+  struct Queue q = *(initialize_queue());
 
   add_to_queue(&q, "Alejandro");
   printf("Queue size: %d\n", q.len);

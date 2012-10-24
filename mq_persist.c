@@ -8,17 +8,19 @@
 #define FILENAME "mq.save"
 
 int save_mq(struct Queue * q){
-  char * str = '\0';
+  char * str = malloc(sizeof(char));
+  struct Queue * p = copy_queue(q);
+  strlcat(str, "\0", 1);
   int size = 1;
   char * res;
-  size += remove_from_queue(q, &res);
+  size += _remove_from_queue(p, &res);
   while(res != NULL){
     size += 1;
     str = realloc(str, size * sizeof(char));
     strlcat(str, res, size - 1);
     strlcat(str, "\n", size);
     free(res);
-    size += remove_from_queue(q, &res);
+    size += _remove_from_queue(p, &res);
   }
   writefile(FILENAME, str, size);
   return 0;
@@ -32,15 +34,15 @@ int open_mq(struct Queue * q){
   for(tok = strtok_r(str, "\n", &saved);
       tok && (*tok != EOF);
       tok = strtok_r(NULL, "\n", &saved)){
-    add_to_queue(q, tok);
+    _add_to_queue(q, tok);
   }
   return 0;
 }
 
 int non_main(){
-  struct Queue * q = malloc(sizeof(struct Queue));
-  struct Queue * p = malloc(sizeof(struct Queue));
-  init_queue(q);
+  struct Queue * q = initialize_queue();
+  struct Queue * p = initialize_queue();
+
   add_to_queue(q, "Alejandro");
   add_to_queue(q, "Darren");
   //save_mq(q);
