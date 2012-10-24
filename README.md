@@ -75,4 +75,6 @@ For an example usage, see `mq_persist.c`.
 
 #### Credits
 
+credits to **@coreylynch** for the bloom* files and implementation.
 credits to **@itairos** for inspiring me to be asynchronous.
+
