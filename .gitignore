@@ -8,3 +8,5 @@ main
 /client/cmd
 *.pyc
 /mq.save
+main_bloom
+*.pyc
