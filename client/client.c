@@ -145,7 +145,7 @@ int recv_data_from_connection(char ** res){
   }
 
   buf[numbytes] = '\0';
-  *res = malloc(sizeof(char) * (numbytes+1));
+  *res = malloc(sizeof(char) * (numbytes + 1));
   if (*res == NULL){
     perror("allocating buffer");
     return -1;

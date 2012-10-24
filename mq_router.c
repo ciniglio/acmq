@@ -16,7 +16,7 @@ void handle_string(char * str, char ** result, void * state){
   struct Queue * queue = (struct Queue *) state;
   *result = NULL;
   if (queue == NULL)
-    initialize_queue();
+    exit(1);
 
   char *command, *body;
   command = strtok_r(str, " ", &body);

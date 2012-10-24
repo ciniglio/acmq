@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -7,10 +8,46 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "server.h"
 
 #define MAXDATASIZE 1024 // max number of bytes we can get at once
+#define MAX_LINE 16384
+
+
+struct fd_state {
+  char * buffer;
+  size_t buffer_used;
+
+  int writing;
+  size_t n_written;
+  size_t write_upto;
+};
+
+struct server {
+  void (*callback) (char *, char **, void *);
+  void * state;
+};
+
+struct fd_state * alloc_fd_state(void){
+  struct fd_state *state = malloc(sizeof(struct fd_state));
+  if (!state)
+    return NULL;
+  state->buffer_used = state->n_written = state->writing =
+    state->write_upto = 0;
+  return state;
+}
+
+void free_fd_state(struct fd_state *state){
+  if (state == NULL)
+    return;
+  if (state->buffer_used){
+    free(state->buffer);
+  }
+  free(state);
+}
+
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa){
@@ -67,18 +104,70 @@ int bind_to_servinfo(struct addrinfo * servinfo, struct addrinfo ** p){
   return socket_fd;
 }
 
+void make_nonblocking(int fd){
+  fcntl(fd, F_SETFL, O_NONBLOCK);
+}
+
+void print_connection_info(struct addrinfo *p) {
+  char t[INET6_ADDRSTRLEN];
+  inet_ntop(p->ai_family,
+            get_in_addr((struct sockaddr *) p->ai_addr),
+            t,
+            sizeof t);
+
+  printf("server: waiting for connections on %s:%d...\n",
+         t,
+         ntohs(get_in_port((struct sockaddr *) p->ai_addr)));
+
+}
+
+int do_read(int sockfd, struct fd_state * state, struct server * s){
+  char buf[MAXDATASIZE];
+  char * result;
+  int num_recieved = recv(sockfd, buf, MAXDATASIZE - 1, 0);
+  buf[num_recieved] = '\0';
+
+  s->callback(buf, &result, s->state);
+  if (result != NULL){
+    state->buffer = result;
+    state->buffer_used = 1;
+  } else {
+    state->buffer_used = 0;
+  }
+  return 0;
+}
+
+int do_write(int sockfd, struct fd_state * state, struct server * s){
+  if(state->buffer_used == 1){
+    if (send(sockfd, state->buffer, strlen(state->buffer) + 1, 0) == -1){
+      perror("send");
+      return 1;
+    }
+  } else {
+    if (send(sockfd, "ACK\n", 4, 0) == -1){
+      perror("send");
+      return 1;
+    }
+  }
+  return 0;
+}
+
 int create_server(void (*callback)(char *, char **, void *),
                   char *port,
                   void * state ){
 
-  int socket_fd, new_connection_fd;
+  int socket_fd, new_connection_fd, i;
     // listen on sock_fd, new connection on new_fd
   struct addrinfo hints, *servinfo, *p;
   struct sockaddr_storage their_addr; // connector's address information
   socklen_t sin_size;
-  char s[INET6_ADDRSTRLEN];
-  char t[INET6_ADDRSTRLEN];
   int rv;
+  fd_set readset, writeset, exset;
+  struct fd_state *fdstate[FD_SETSIZE] = {};
+  struct server *s = malloc(sizeof(struct server));
+
+  s->callback = callback;
+  s->state = state;
 
   set_hints_for_streaming(&hints);
 
@@ -95,58 +184,70 @@ int create_server(void (*callback)(char *, char **, void *),
     return 2;
   }
 
-
-
   if (listen(socket_fd, 10) == -1){
     perror("listen");
     exit(1);
   }
 
-  inet_ntop(p->ai_family,
-            get_in_addr((struct sockaddr *) p->ai_addr),
-            t,
-            sizeof t);
-
-  printf("server: waiting for connections on %s:%d...\n",
-         t,
-         ntohs(get_in_port((struct sockaddr *) p->ai_addr)));
-
+  print_connection_info(p);
   freeaddrinfo(servinfo); // all done with this structure
 
   while(1){  // main accept() loop
-    sin_size = sizeof their_addr;
-    new_connection_fd = accept(socket_fd,
-                               (struct sockaddr *)&their_addr,
-                               &sin_size);
+    int maxfd = socket_fd + 1;
+    FD_ZERO(&readset);
+    FD_ZERO(&writeset);
+    FD_ZERO(&exset);
 
-    if (new_connection_fd == -1){
-      perror("accept");
-      continue;
+    FD_SET(socket_fd, &readset);
+
+    for (i=0; i < FD_SETSIZE; ++i) {
+      if (fdstate[i]) {
+        if (i > maxfd)
+          maxfd = i;
+        FD_SET(i, &readset);
+        if (fdstate[i]->writing) {
+          FD_SET(i, &writeset);
+        }
+      }
     }
 
-    inet_ntop(their_addr.ss_family,
-              get_in_addr((struct sockaddr *)&their_addr),
-              s,
-              sizeof s);
-    printf("server: got connection from %s\n", s);
-
-    char buf[MAXDATASIZE];
-    char * result;
-    int num_recieved = recv(new_connection_fd, buf, MAXDATASIZE - 1, 0);
-    buf[num_recieved] = '\0';
-
-    callback(buf, &result, state);
-
-    if(result != NULL){
-      if (send(new_connection_fd, result, strlen(result) + 1, 0) == -1)
-        perror("send");
-      free(result);
+    if (select(maxfd+1, &readset, &writeset, &exset, NULL) < 0) {
+      perror("select");
+      return -1;
     }
-    if (send(new_connection_fd, "ACK\n", 4, 0) == -1)
-      perror("send");
 
-    free(buf);
-    close(new_connection_fd);
+    if (FD_ISSET(socket_fd, &readset)) {
+      sin_size = sizeof their_addr;
+      new_connection_fd = accept(socket_fd,
+                                 (struct sockaddr *)&their_addr,
+                                 &sin_size);
+      if (new_connection_fd < 0) {
+        perror("accept");
+      } else if (new_connection_fd > FD_SETSIZE) {
+        close(new_connection_fd);
+      } else {
+        make_nonblocking(new_connection_fd);
+        fdstate[new_connection_fd] = alloc_fd_state();
+      }
+    }
+
+    for (i=0; i < maxfd+1; ++i) {
+      int r = 0;
+      if (i == socket_fd)
+        continue;
+
+      if (FD_ISSET(i, &readset)) {
+        r = do_read(i, fdstate[i], s);
+        r = do_write(i, fdstate[i], s);
+        free_fd_state(fdstate[i]);
+        fdstate[i] = NULL;
+        close(i);
+      }
+      if (r == 0 && FD_ISSET(i, &writeset)) {
+        //r = do_write(i, fdstate[i], s);
+      }
+
+    }
   }
   return 0;
 }
