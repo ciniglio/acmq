@@ -189,7 +189,7 @@ int client_transaction(struct client * c, char * buf, char ** res){
   return 0;
 }
 
-int main_test(int argc, char *argv[]){
+int main_test_queue(int argc, char *argv[]){
   char *buf;
 
   if (argc != 2){
@@ -206,3 +206,23 @@ int main_test(int argc, char *argv[]){
   destroy_connection();
   return 0;
 }
+
+int main_test_bloom(int argc, char *argv[]){
+  char *buf;
+
+  if (argc != 2){
+    fprintf(stderr,"usage: client hostname\n");
+    exit(1);
+  }
+  init_connection(argv[1], PORT);
+  print_connection_info();
+
+  send_data_through_connection("BLOOM_ADD newval");
+  recv_data_from_connection(&buf);
+  fprintf(stderr, "%s\n", buf);
+  free(buf);
+
+  destroy_connection();
+  return 0;
+}
+
