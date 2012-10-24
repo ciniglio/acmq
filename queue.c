@@ -54,9 +54,20 @@ int remove_from_queue(struct Queue * q, char **result){
   return size;
 }
 
-int init_queue(struct Queue * q){
-  q->len = 0;
-  return 0;
+struct Queue * _initialize_queue(){
+  struct Queue * queue = malloc(sizeof(struct Queue));
+  queue->len = 0;
+  return queue;
+}
+
+struct Queue * initialize_queue(){
+  struct Queue * q = _initialize_queue();
+  if(open_mq(q) != 0){
+    perror("Open queue");
+    exit(10);
+  }
+  return q;
+}
 }
 
 int main_test(){

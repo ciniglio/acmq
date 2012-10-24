@@ -6,12 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Queue * initialize_queue(){
-  struct Queue * queue = malloc(sizeof(struct Queue));
-  init_queue(queue);
-  return queue;
-}
-
 void handle_string(char * str, char ** result, void * state){
   struct Queue * queue = (struct Queue *) state;
   *result = NULL;
