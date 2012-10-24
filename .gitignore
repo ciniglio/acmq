@@ -10,3 +10,4 @@ main
 /mq.save
 main_bloom
 *.pyc
+bloom.bin
