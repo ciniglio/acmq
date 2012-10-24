@@ -12,16 +12,20 @@ void handle_string(char * str, char ** result, void * state){
   if (queue == NULL)
     exit(1);
 
-  char *command, *body;
-  command = strtok_r(str, " ", &body);
+  char *cmd, *body, *command_str, *command_body;
+  for(command_str = strtok_r(str, "\n", &command_body);
+      command_str && (*command_str != EOF);
+      command_str = strtok_r(NULL, "\n", &command_body)){
 
-  if (command != NULL &&
-      !strncmp(command, PUSH, PUSHLEN)){
-    add_to_queue(queue, body);
-  } else if (str != NULL &&
-             !strncmp(str, POP, POPLEN)){
-    remove_from_queue(queue, result);
-  } else {
-    printf("don't know what we did\n");
+    cmd = strtok_r(command_str, " ", &body);
+    if (cmd != NULL &&
+        !strncmp(cmd, PUSH, PUSHLEN)){
+      add_to_queue(queue, body);
+    } else if (str != NULL &&
+               !strncmp(command_str, POP, POPLEN)){
+      remove_from_queue(queue, result);
+    } else {
+      printf("BAD INPUT RECIEVED\n");
+    }
   }
 }
