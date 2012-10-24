@@ -11,6 +11,7 @@ void usage(){
   printf(" -ba [Bloom_add]<body>\n");
   printf(" -bc [Bloom_check]<body>\n");
   printf(" -bd [Boom_delete]<body>\n");
+  printf(" -bs [Boom_save]\n");
   exit (8);
 }
 
@@ -19,6 +20,7 @@ int main(int argc, char * argv[]){
   int bloom_add = 0;
   int bloom_check = 0;
   int bloom_delete = 0;
+  int bloom_save = 0;
   char *body = NULL;
   char *host = NULL;
   char *port = NULL;
@@ -49,6 +51,9 @@ int main(int argc, char * argv[]){
     case 'bd':
       bloom_delete = 1;
       body = argv[++count];
+    case 'bs':
+      bloom_save = 1;
+      body = argv[++count];
     }
     count++;
 
@@ -76,7 +81,10 @@ int main(int argc, char * argv[]){
   		usage();
   	}
   	delete(c, body);
-  } else {
+  } else if(bloom_save){
+    save();
+  }
+  else {
   	usage();
   }
 
