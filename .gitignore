@@ -7,3 +7,5 @@ main
 /client/mq_client
 /client/cmd
 *.pyc
+main_bloom
+*.pyc
