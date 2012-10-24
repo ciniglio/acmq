@@ -5,8 +5,6 @@
 
 #include "persistence.h"
 
-#define MAX_SIZE 1024
-
 int readfile(char * filename, char ** str){
   FILE * f = fopen(filename, "rb");
   long filesize;
