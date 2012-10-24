@@ -254,7 +254,6 @@ int create_server(void (*callback)(char *, char **, void *),
       if (r == 0 && FD_ISSET(i, &writeset)) {
         r = do_write(i, fdstate[i], s);
       }
-
     }
   }
   return 0;
