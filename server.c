@@ -23,6 +23,8 @@ struct fd_state {
   int writing;
   size_t n_written;
   size_t write_upto;
+
+  int finished;
 };
 
 struct server {
@@ -35,7 +37,7 @@ struct fd_state * alloc_fd_state(void){
   if (!state)
     return NULL;
   state->buffer_used = state->n_written = state->writing =
-    state->write_upto = 0;
+    state->write_upto = state->finished = 0;
   return state;
 }
 
@@ -134,6 +136,9 @@ int do_read(int sockfd, struct fd_state * state, struct server * s){
   } else {
     state->buffer_used = 0;
   }
+
+  state->writing = 1;
+
   return 0;
 }
 
@@ -149,6 +154,7 @@ int do_write(int sockfd, struct fd_state * state, struct server * s){
       return 1;
     }
   }
+  state->finished = 1;
   return 0;
 }
 
@@ -204,6 +210,12 @@ int create_server(void (*callback)(char *, char **, void *),
       if (fdstate[i]) {
         if (i > maxfd)
           maxfd = i;
+        if (fdstate[i] -> finished){
+          free_fd_state(fdstate[i]);
+          fdstate[i] = NULL;
+          close(i);
+          continue;
+        }
         FD_SET(i, &readset);
         if (fdstate[i]->writing) {
           FD_SET(i, &writeset);
@@ -238,13 +250,9 @@ int create_server(void (*callback)(char *, char **, void *),
 
       if (FD_ISSET(i, &readset)) {
         r = do_read(i, fdstate[i], s);
-        r = do_write(i, fdstate[i], s);
-        free_fd_state(fdstate[i]);
-        fdstate[i] = NULL;
-        close(i);
       }
       if (r == 0 && FD_ISSET(i, &writeset)) {
-        //r = do_write(i, fdstate[i], s);
+        r = do_write(i, fdstate[i], s);
       }
 
     }
