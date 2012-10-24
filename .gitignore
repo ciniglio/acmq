@@ -7,3 +7,4 @@ main
 /client/mq_client
 /client/cmd
 *.pyc
+/mq.save
