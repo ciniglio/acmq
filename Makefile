@@ -5,7 +5,7 @@ CFLAGS = -Wall -g
 
 queue_HDR = queue.h
 
-main: server.o mq_router.o queue.o main.o
+main: server.o mq_router.o queue.o main.o mq_persist.o persistence.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 strip: server.o mq_router.o
