@@ -31,6 +31,48 @@ server.
 -u "This long string"` will send the command `"PUSH This long string"`
 to the server via the client's socket.
 
+## Notes about the protocol
+
+### Definition
+
+Defintion of the protocol happens in the router, and the client must
+adhere to it. The server will append a `NULL` to the end of the
+recieved buffer, so string operations on that buffer should be
+generally safe. 
+
+### MQ Protocol
+
+The protocol that the message queue adheres to has statements that are
+delimited by newlines (`\n`). This means that input with newlines will
+be interpreted incorrectly, and information after the newline is
+likely to be lost. For this reason, it's recommended that you use JSON
+to encode and decode the messages.
+
+#### Push
+
+The push command takes the form "`PUSH $body`". `$body` will then be
+added to the queue.
+
+#### Pop
+
+The pop command takes the form "`POP`" with no arguments. The server
+will then return the message at the front of the queue.
+
+## Persistence
+
+There is a persistence layer that each structure is responsible
+for. The message queue structure implements this and serializes the
+queue to disk after each transaction. Upon starting the program, we
+will attempt to deserialize the queue from disk if possible. 
+
+### `Persistence.c`
+
+This file has helper functions that make it easy to read and write
+from disk. Each structure should have methods to serialize and
+deserialize the structure to and from a `char *` buffer, respectively.
+
+For an example usage, see `mq_persist.c`.
+
 #### Credits
 
 credits to **@itairos** for inspiring me to be asynchronous.
