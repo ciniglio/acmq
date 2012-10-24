@@ -14,10 +14,11 @@ typedef struct {
 } BLOOM;
 
 BLOOM *bloom_create(uint32_t size, double error_rate);
+BLOOM *bloom_create_from_file(uint32_t size, double error_rate);
 int bloom_insert(BLOOM *bloom, const char *s, uint32_t len);
 int bloom_check(BLOOM *bloom, const char *s, uint32_t len);
 int bloom_delete(BLOOM *bloom, const char *s, uint32_t len);
 int bloom_destroy(BLOOM *bloom);
-
+BLOOM *load_bloom(uint32_t size, double error_rate);
 #endif
 

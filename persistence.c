@@ -28,9 +28,10 @@ int readfile(char * filename, char ** str){
     return -1;
   }
   fclose(f);
+  return result;
 }
 
-int writefile(char * filename, char * buf, int len){
+int writefile(char * filename, char * buf, size_t len){
   FILE * f = fopen(filename, "wb");
   int result;
   result = fwrite(buf, sizeof(char), len, f);
@@ -39,6 +40,7 @@ int writefile(char * filename, char * buf, int len){
     return -1;
   }
   fclose(f);
+  return 0;
 }
 
 int main_test(){

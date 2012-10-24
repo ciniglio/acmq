@@ -4,18 +4,52 @@
 #include <math.h>
 #include "bloom.h"
 #include "murmur.h"
-
+#include "bloom_io.h"
 
 #define BLOOMIN_VERSION "0.0.1"
 
 #define SALT_CONSTANT 0x97c29b3a
+
+/*
+#define ERROR_RATE .01
+#define SIZE 10000000
+*/
+
+
+BLOOM *bloom_init(uint32_t size, double error_rate)
+{
+	BLOOM *bloom;
+	if ((bloom = (BLOOM *)malloc(sizeof(BLOOM))) == NULL) {
+		fprintf(stderr, "Error, could not alloc a new bloom filter\n");
+        return NULL;
+    }
+	bloom->filter = NULL;
+	bloom->size = size;
+	bloom->num_funcs = (uint32_t) ceil(log(1 / error_rate) / log(2));
+	bloom->hashes = calloc(bloom->num_funcs, sizeof(uint32_t));
+	return bloom;
+}
+
+
+BLOOM *bloom_load(uint32_t size, double error_rate)
+{
+
+	BLOOM *bloom = bloom_init(size, error_rate);
+	if (bloom_read(bloom) == 0)
+	{
+		fprintf(stderr, "Error, could not alloc a new bloom filter\n");
+		return NULL;
+	}
+	return bloom;
+}
+
 
 BLOOM *bloom_create(uint32_t size, double error_rate)
 {
 	BLOOM *bloom;
 
 	if ((bloom = (BLOOM *)malloc(sizeof(BLOOM))) == NULL) {
-        fprintf(stderr, "Error, could not realloc a new bloom filter\n");
+        fprintf(stderr, "Error, could not alloc a new bloom filter\n");
         return NULL;
     }
 
@@ -29,6 +63,14 @@ BLOOM *bloom_create(uint32_t size, double error_rate)
 	
 	return bloom;
 }
+
+
+BLOOM *bloom_create_from_file(uint32_t size, double error_rate)
+{
+	BLOOM *bloom = bloom_load(size, error_rate); 
+	return bloom;
+}
+
 
 static void hash_func(BLOOM *bloom, const char *key, uint32_t key_len, uint32_t *hashes)
 {
@@ -114,3 +156,26 @@ int bloom_destroy(BLOOM *bloom)
 	return 0;
 
 }
+
+
+/*
+int main()
+{
+
+	BLOOM *bloom = bloom_create_from_file(SIZE,ERROR_RATE);
+
+	bloom_check(bloom, "newval", strlen("newval"));
+	bloom_insert(bloom, "newval", strlen("newval"));
+	bloom_write(bloom);
+	BLOOM *bloom2 = bloom_load(SIZE,ERROR_RATE);
+	bloom_check(bloom2, "newval", strlen("newval"));
+	return 0;
+}
+*/
+
+
+
+
+
+
+

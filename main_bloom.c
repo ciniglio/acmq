@@ -8,7 +8,7 @@
 #define SIZE 100000
 
 int main(){
-  BLOOM * bloom = bloom_create(SIZE, ERROR_RATE);
+  BLOOM * bloom = bloom_create_from_file(SIZE,ERROR_RATE);
   int ret = create_server(&handle_string, "3443", bloom);
   free(bloom);
   return ret;
