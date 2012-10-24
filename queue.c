@@ -37,9 +37,10 @@ int remove_from_queue(struct Queue * q, char **result){
   }
 
   struct Node * n = q->first;
+  int size = n->body_size;
   *result = malloc((n->body_size + 1) * sizeof(char));
   if (*result == NULL)
-    return 1;
+    return -1;
   strlcpy(*result, n->body, n->body_size+1);
 
   q->first = q->first->next;
@@ -50,7 +51,7 @@ int remove_from_queue(struct Queue * q, char **result){
   free(n->body);
   free(n);
 
-  return 0;
+  return size;
 }
 
 int init_queue(struct Queue * q){
