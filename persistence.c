@@ -7,6 +7,12 @@
 
 int readfile(char * filename, char ** str){
   FILE * f = fopen(filename, "rb");
+  if (f == NULL){
+    // file doesn't exist
+    *str = NULL;
+    fclose(f);
+    return 0;
+  }
   long filesize;
   long result;
   struct stat st;
@@ -15,7 +21,7 @@ int readfile(char * filename, char ** str){
   filesize = st.st_size;
 
   *str = (char *) malloc(sizeof(char) * filesize);
-  if (str == NULL){
+  if (*str == NULL){
     perror("Malloc");
     return -1;
   }
@@ -26,6 +32,7 @@ int readfile(char * filename, char ** str){
     return -1;
   }
   fclose(f);
+  return 0;
 }
 
 int writefile(char * filename, char * buf, int len){
@@ -37,9 +44,10 @@ int writefile(char * filename, char * buf, int len){
     return -1;
   }
   fclose(f);
+  return 0;
 }
 
-int main_test(){
+int main_testp(){
   char * res;
   writefile("test.bin", "This is a \n string", strlen("This is a \n string"));
   readfile("test.bin", &res);
