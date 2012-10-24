@@ -8,7 +8,7 @@ queue_HDR = queue.h
 main: server.o mq_router.o queue.o main.o mq_persist.o persistence.o
 	$(CC) $(CFLAGS) $^ -o $@
 
-main_bloom: server.o bloom_router.o bloom.o main_bloom.o murmur.o
+main_bloom: server.o bloom_router.o bloom.o main_bloom.o murmur.o bloom_io.o persistence.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 strip: server.o mq_router.o
